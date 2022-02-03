@@ -7,6 +7,7 @@ from esphome.const import CONF_ID, CONF_TIME_ID, CONF_TRIGGER_ID, CONF_SENSOR_DA
 
 DEPENDENCIES = ["uart"]
 
+CONF_USE_LOW_POWER_PROTOCOL = "use_low_power_protocol"
 CONF_IGNORE_MCU_UPDATE_ON_DATAPOINTS = "ignore_mcu_update_on_datapoints"
 
 CONF_ON_DATAPOINT_UPDATE = "on_datapoint_update"
@@ -85,6 +86,7 @@ CONFIG_SCHEMA = (
         {
             cv.GenerateID(): cv.declare_id(Tuya),
             cv.Optional(CONF_TIME_ID): cv.use_id(time.RealTimeClock),
+            cv.Optional(CONF_USE_LOW_POWER_PROTOCOL): cv.boolean,
             cv.Optional(CONF_IGNORE_MCU_UPDATE_ON_DATAPOINTS): cv.ensure_list(
                 cv.uint8_t
             ),
@@ -114,6 +116,9 @@ async def to_code(config):
     if CONF_TIME_ID in config:
         time_ = await cg.get_variable(config[CONF_TIME_ID])
         cg.add(var.set_time_id(time_))
+    if CONF_USE_LOW_POWER_PROTOCOL in config:
+        use_low_power_protocol_ = config[CONF_USE_LOW_POWER_PROTOCOL]
+        cg.add(var.set_use_low_power_protocol(use_low_power_protocol_))
     if CONF_IGNORE_MCU_UPDATE_ON_DATAPOINTS in config:
         for dp in config[CONF_IGNORE_MCU_UPDATE_ON_DATAPOINTS]:
             cg.add(var.add_ignore_mcu_update_on_datapoints(dp))

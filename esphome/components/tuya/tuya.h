@@ -55,6 +55,21 @@ enum class TuyaCommandType : uint8_t {
   LOCAL_TIME_QUERY = 0x1C,
 };
 
+enum class TuyaLowPowerCommandType : uint8_t {
+  PRODUCT_QUERY = 0x01,
+  WIFI_STATE = 0x02,
+  WIFI_RESET = 0x03,
+  WIFI_SELECT = 0x04,
+  DATAPOINT_REPORT = 0x05,
+  LOCAL_TIME_QUERY = 0x06,
+  WIFI_TEST = 0x07,
+  DATAPOINT_REPORT_STORED = 0x08,
+  MODULE_COMMAND = 0x09,
+  OBTAIN_DP_CACHE = 0x10,
+  FIRMWARE_UPGRADE = 0x0a,
+  SIGNAL_STRENGTH_QUERY = 0x0b
+};
+
 enum class TuyaInitState : uint8_t {
   INIT_HEARTBEAT = 0x00,
   INIT_PRODUCT,
@@ -65,7 +80,7 @@ enum class TuyaInitState : uint8_t {
 };
 
 struct TuyaCommand {
-  TuyaCommandType cmd;
+  uint8_t cmd;
   std::vector<uint8_t> payload;
 };
 
@@ -92,6 +107,7 @@ class Tuya : public Component, public uart::UARTDevice {
 #ifdef USE_TIME
   void set_time_id(time::RealTimeClock *time_id) { this->time_id_ = time_id; }
 #endif
+  void set_use_low_power_protocol(bool value) { this->use_low_power_protocol_ = value; }
   void add_ignore_mcu_update_on_datapoints(uint8_t ignore_mcu_update_on_datapoints) {
     this->ignore_mcu_update_on_datapoints_.push_back(ignore_mcu_update_on_datapoints);
   }
@@ -106,10 +122,11 @@ class Tuya : public Component, public uart::UARTDevice {
   bool validate_message_();
 
   void handle_command_(uint8_t command, uint8_t version, const uint8_t *buffer, size_t len);
+  void handle_low_power_command_(uint8_t command, uint8_t version, const uint8_t *buffer, size_t len);
   void send_raw_command_(TuyaCommand command);
   void process_command_queue_();
   void send_command_(const TuyaCommand &command);
-  void send_empty_command_(TuyaCommandType command);
+  void send_empty_command_(uint8_t command);
   void set_numeric_datapoint_value_(uint8_t datapoint_id, TuyaDatapointType datapoint_type, uint32_t value,
                                     uint8_t length, bool forced);
   void set_string_datapoint_value_(uint8_t datapoint_id, const std::string &value, bool forced);
@@ -121,6 +138,7 @@ class Tuya : public Component, public uart::UARTDevice {
   void send_local_time_();
   optional<time::RealTimeClock *> time_id_{};
 #endif
+  bool use_low_power_protocol_ = false;
   TuyaInitState init_state_ = TuyaInitState::INIT_HEARTBEAT;
   uint8_t protocol_version_ = -1;
   int gpio_status_ = -1;
@@ -133,7 +151,7 @@ class Tuya : public Component, public uart::UARTDevice {
   std::vector<uint8_t> rx_message_;
   std::vector<uint8_t> ignore_mcu_update_on_datapoints_{};
   std::vector<TuyaCommand> command_queue_;
-  optional<TuyaCommandType> expected_response_{};
+  optional<uint8_t> expected_response_{};
   uint8_t wifi_status_ = -1;
   CallbackManager<void()> initialized_callback_{};
 };
