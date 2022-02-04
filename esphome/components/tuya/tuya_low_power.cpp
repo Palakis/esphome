@@ -9,7 +9,6 @@ namespace tuya {
 
 void TuyaLowPower::setup() {
   this->send_wifi_status_();
-  this->send_empty_command_(TuyaLowPowerCommandType::PRODUCT_QUERY);
 }
 
 void TuyaLowPower::dump_config() {
