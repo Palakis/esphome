@@ -84,7 +84,7 @@ void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8
     case TuyaLowPowerCommandType::DATAPOINT_REPORT:
       this->handle_datapoints_(buffer, len);
       // ack DATAPOINT_REPORT
-      this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::DATAPOINT_REPORT, .payload = std::vector<uint8_t>{0x01}});
+      this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::DATAPOINT_REPORT, .payload = std::vector<uint8_t>{0x00}});
       break;
 
     case TuyaLowPowerCommandType::LOCAL_TIME_QUERY:
