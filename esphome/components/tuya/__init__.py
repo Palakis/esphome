@@ -9,11 +9,13 @@ DEPENDENCIES = ["uart"]
 
 CONF_IGNORE_MCU_UPDATE_ON_DATAPOINTS = "ignore_mcu_update_on_datapoints"
 
+CONF_LOW_POWER_DEVICE = "low_power_device"
 CONF_ON_DATAPOINT_UPDATE = "on_datapoint_update"
 CONF_DATAPOINT_TYPE = "datapoint_type"
 
 tuya_ns = cg.esphome_ns.namespace("tuya")
 Tuya = tuya_ns.class_("Tuya", cg.Component, uart.UARTDevice)
+TuyaLowPower = tuya_ns.class_("TuyaLowPower", Tuya)
 
 DPTYPE_ANY = "any"
 DPTYPE_RAW = "raw"
@@ -84,6 +86,7 @@ CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(Tuya),
+            cv.Optional(CONF_LOW_POWER_DEVICE): cv.boolean,
             cv.Optional(CONF_TIME_ID): cv.use_id(time.RealTimeClock),
             cv.Optional(CONF_IGNORE_MCU_UPDATE_ON_DATAPOINTS): cv.ensure_list(
                 cv.uint8_t
@@ -108,6 +111,10 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config):
+    is_low_power_device = config[CONF_LOW_POWER_DEVICE]
+    if is_low_power_device is True:
+        config[CONF_ID].type = TuyaLowPower
+
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
