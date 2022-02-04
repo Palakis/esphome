@@ -70,16 +70,21 @@ void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8
       break;
 
     case TuyaLowPowerCommandType::WIFI_RESET:
-      ESP_LOGE(TAG, "WIFI_RESET is not handled");
+      ESP_LOGI(TAG, "WIFI_RESET received");
+      // ack WIFI_RESET
+      this->send_empty_command_(TuyaLowPowerCommandType::WIFI_RESET);
       break;
 
     case TuyaLowPowerCommandType::WIFI_SELECT:
-      ESP_LOGE(TAG, "WIFI_SELECT is not handled");
+      ESP_LOGI(TAG, "WIFI_SELECT received with mode 0x%02X", buffer[0]);
+      // ack WIFI_SELECT
+      this->send_empty_command_(TuyaLowPowerCommandType::WIFI_SELECT);
       break;
 
     case TuyaLowPowerCommandType::DATAPOINT_REPORT:
       this->handle_datapoints_(buffer, len);
-      this->send_command_(TuyaLowPowerCommand{ .cmd = TuyaLowPowerCommandType::DATAPOINT_REPORT, .payload = std::vector<uint8_t>{0x01} });
+      // ack DATAPOINT_REPORT
+      this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::DATAPOINT_REPORT, .payload = std::vector<uint8_t>{0x01}});
       break;
 
     case TuyaLowPowerCommandType::LOCAL_TIME_QUERY:
@@ -90,13 +95,16 @@ void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8
         time_id->add_on_time_sync_callback([this] { this->send_local_time_(); });
       } else {
         ESP_LOGW(TAG, "LOCAL_TIME_QUERY is not handled because time is not configured");
+        // TODO respond failure to MCU
       }
 #else
       ESP_LOGE(TAG, "LOCAL_TIME_QUERY is not handled");
+      // TODO respond failure to MCU
 #endif
       break;
 
     case TuyaLowPowerCommandType::WIFI_TEST:
+      // response: WIFI_TEST failed
       this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::WIFI_TEST, .payload = std::vector<uint8_t>{0x00, 0x00}});
       break;
 
@@ -105,15 +113,18 @@ void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8
       break;
 
     case TuyaLowPowerCommandType::OBTAIN_DP_CACHE:
+      // response: OBTAIN_DP_CACHE failed
       this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::OBTAIN_DP_CACHE, .payload = std::vector<uint8_t>{0x00}});
       break;
 
     case TuyaLowPowerCommandType::FIRMWARE_UPGRADE:
-      ESP_LOGE(TAG, "FIRMWARE_UPGRADE is not handled");
+      // response: no firmware upgrade needed
+      this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::FIRMWARE_UPGRADE, .payload = std::vector<uint8_t>{0x01}});
       break;
 
     case TuyaLowPowerCommandType::SIGNAL_STRENGTH_QUERY:
-      this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::SIGNAL_STRENGTH_QUERY, .payload = std::vector<uint8_t>{0x01, 100}});
+      // response: 100% signal strength
+      this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::SIGNAL_STRENGTH_QUERY, .payload = std::vector<uint8_t>{0x01, (uint8_t)100}});
       break;
 
     default:
