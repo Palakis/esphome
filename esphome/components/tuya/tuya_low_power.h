@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tuya.h"
+#include "tuya_base.h"
 
 namespace esphome {
 namespace tuya {
@@ -20,29 +20,21 @@ enum class TuyaLowPowerCommandType : uint8_t {
   SIGNAL_STRENGTH_QUERY = 0x0b
 };
 
-struct TuyaLowPowerCommand {
-  TuyaLowPowerCommandType cmd;
-  std::vector<uint8_t> payload;
-};
+using TuyaLowPowerCommand = TuyaCommand<TuyaLowPowerCommandType>;
 
-class TuyaLowPower : public Tuya {
+class TuyaLowPower : public TuyaBase<TuyaLowPowerCommandType> {
  public:
-  void setup() override;
+  void setup() override {};
   void dump_config() override;
 
  protected:
-  void handle_command_(uint8_t command, uint8_t version, const uint8_t *buffer, size_t len);
-  void send_raw_command_(TuyaLowPowerCommand command);
-  void process_command_queue_();
-  void send_command_(const TuyaLowPowerCommand &command);
-  void send_empty_command_(TuyaLowPowerCommandType command);
+  void handle_command_(uint8_t command, uint8_t version, const uint8_t *buffer, size_t len) override;
+  void before_send_raw_command_(TuyaLowPowerCommand command) override {};
+  void send_datapoint_command_(uint8_t datapoint_id, TuyaDatapointType datapoint_type, std::vector<uint8_t> data) override {};
   void send_wifi_status_();
-
 #ifdef USE_TIME
   void send_local_time_();
 #endif
-  std::vector<TuyaLowPowerCommand> command_queue_;
-  optional<TuyaLowPowerCommandType> expected_response_{};
 };
 
 }  // namespace tuya

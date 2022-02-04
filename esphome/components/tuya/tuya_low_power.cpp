@@ -2,16 +2,10 @@
 #include "esphome/components/network/util.h"
 #include "esphome/core/util.h"
 
+#include "tuya_base.cpp"
+
 namespace esphome {
 namespace tuya {
-
-static const char *const TAG = "tuya_low_power";
-static const int COMMAND_DELAY = 10;
-static const int RECEIVE_TIMEOUT = 300;
-
-void TuyaLowPower::setup() {
-  // do nothing
-}
 
 void TuyaLowPower::dump_config() {
   ESP_LOGCONFIG(TAG, "Tuya Low Power:");
@@ -112,53 +106,6 @@ void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8
   }
 }
 
-void TuyaLowPower::send_raw_command_(TuyaLowPowerCommand command) {
-  uint8_t len_hi = (uint8_t)(command.payload.size() >> 8);
-  uint8_t len_lo = (uint8_t)(command.payload.size() & 0xFF);
-  uint8_t version = 0;
-
-  ESP_LOGV(TAG, "Sending Tuya: CMD=0x%02X VERSION=%u DATA=[%s] INIT_STATE=%u", static_cast<uint8_t>(command.cmd),
-           version, format_hex_pretty(command.payload).c_str(), static_cast<uint8_t>(this->init_state_));
-
-  this->write_array({0x55, 0xAA, version, (uint8_t) command.cmd, len_hi, len_lo});
-  if (!command.payload.empty())
-    this->write_array(command.payload.data(), command.payload.size());
-
-  uint8_t checksum = 0x55 + 0xAA + (uint8_t) command.cmd + len_hi + len_lo;
-  for (auto &data : command.payload)
-    checksum += data;
-  this->write_byte(checksum);
-}
-
-void TuyaLowPower::process_command_queue_() {
-  uint32_t now = millis();
-  uint32_t delay = now - this->last_command_timestamp_;
-
-  if (now - this->last_rx_char_timestamp_ > RECEIVE_TIMEOUT) {
-    this->rx_message_.clear();
-  }
-
-  if (this->expected_response_.has_value() && delay > RECEIVE_TIMEOUT) {
-    this->expected_response_.reset();
-  }
-
-  // Left check of delay since last command in case there's ever a command sent by calling send_raw_command_ directly
-  if (delay > COMMAND_DELAY && !this->command_queue_.empty() && this->rx_message_.empty() &&
-      !this->expected_response_.has_value()) {
-    this->send_raw_command_(command_queue_.front());
-    this->command_queue_.erase(command_queue_.begin());
-  }
-}
-
-void TuyaLowPower::send_command_(const TuyaLowPowerCommand &command) {
-  command_queue_.push_back(command);
-  process_command_queue_();
-}
-
-void TuyaLowPower::send_empty_command_(TuyaLowPowerCommandType command) {
-  send_command_(TuyaLowPowerCommand{.cmd = command, .payload = std::vector<uint8_t>{}});
-}
-
 void TuyaLowPower::send_wifi_status_() {
   uint8_t status = 0x02;
   if (network::is_connected()) {
@@ -170,7 +117,6 @@ void TuyaLowPower::send_wifi_status_() {
   }
 
   ESP_LOGD(TAG, "Sending WiFi Status");
-  this->wifi_status_ = status;
   this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::WIFI_STATE, .payload = std::vector<uint8_t>{status}});
 }
 

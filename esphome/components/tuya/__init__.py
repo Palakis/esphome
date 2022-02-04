@@ -18,8 +18,9 @@ PROTOCOL_TYPE_NORMAL = "NORMAL"
 PROTOCOL_TYPE_LOW_POWER = "LOW_POWER"
 
 tuya_ns = cg.esphome_ns.namespace("tuya")
-Tuya = tuya_ns.class_("Tuya", cg.Component, uart.UARTDevice)
-TuyaLowPower = tuya_ns.class_("TuyaLowPower", Tuya)
+TuyaBase = tuya_ns.class_("TuyaBase", cg.Component, uart.UARTDevice)
+Tuya = tuya_ns.class_("Tuya", TuyaBase)
+TuyaLowPower = tuya_ns.class_("TuyaLowPower", TuyaBase)
 
 DPTYPE_ANY = "any"
 DPTYPE_RAW = "raw"
@@ -89,7 +90,7 @@ CONF_TUYA_ID = "tuya_id"
 CONFIG_SCHEMA = (
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(Tuya),
+            cv.GenerateID(): cv.declare_id(TuyaBase),
             cv.Optional(CONF_PROTOCOL_TYPE, default=PROTOCOL_TYPE_NORMAL): cv.one_of(
                 PROTOCOL_TYPE_NORMAL, PROTOCOL_TYPE_LOW_POWER, upper=True
             ),
@@ -118,7 +119,9 @@ CONFIG_SCHEMA = (
 
 async def to_code(config):
     protocol_type_ = config[CONF_PROTOCOL_TYPE]
-    if protocol_type_ == PROTOCOL_TYPE_LOW_POWER:
+    if protocol_type_ == PROTOCOL_TYPE_NORMAL:
+        config[CONF_ID].type = Tuya
+    elif protocol_type_ == PROTOCOL_TYPE_LOW_POWER:
         config[CONF_ID].type = TuyaLowPower
 
     var = cg.new_Pvariable(config[CONF_ID])
