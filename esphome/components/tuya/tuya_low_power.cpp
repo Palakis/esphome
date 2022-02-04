@@ -34,6 +34,11 @@ void TuyaLowPower::dump_config() {
   this->check_uart_settings(9600);
 }
 
+void TuyaLowPower::enter_low_power_mode() {
+  ESP_LOGI(TAG, "Entering low power mode");
+  this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::WIFI_STATE, .payload = std::vector<uint8_t>{0x05}});
+}
+
 void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8_t *buffer, size_t len) {
   TuyaLowPowerCommandType command_type = (TuyaLowPowerCommandType) command;
 
@@ -58,6 +63,10 @@ void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8
       }
       break;
     }
+
+    case TuyaLowPowerCommandType::WIFI_STATE:
+      this->send_wifi_status_();
+      break;
 
     case TuyaLowPowerCommandType::WIFI_RESET:
       ESP_LOGE(TAG, "WIFI_RESET is not handled");

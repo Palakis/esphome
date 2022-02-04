@@ -26,6 +26,7 @@ class TuyaLowPower : public TuyaBase<TuyaLowPowerCommandType> {
  public:
   void setup() override;
   void dump_config() override;
+  void enter_low_power_mode();
 
  protected:
   void handle_command_(uint8_t command, uint8_t version, const uint8_t *buffer, size_t len) override;
