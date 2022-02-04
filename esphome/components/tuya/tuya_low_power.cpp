@@ -7,6 +7,10 @@
 namespace esphome {
 namespace tuya {
 
+void TuyaLowPower::setup() {
+  this->send_wifi_status_();
+}
+
 void TuyaLowPower::dump_config() {
   ESP_LOGCONFIG(TAG, "Tuya Low Power:");
   for (auto &info : this->datapoints_) {

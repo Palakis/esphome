@@ -24,7 +24,7 @@ using TuyaLowPowerCommand = TuyaCommand<TuyaLowPowerCommandType>;
 
 class TuyaLowPower : public TuyaBase<TuyaLowPowerCommandType> {
  public:
-  void setup() override {};
+  void setup() override;
   void dump_config() override;
 
  protected:
