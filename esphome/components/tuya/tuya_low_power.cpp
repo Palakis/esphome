@@ -37,6 +37,7 @@ void TuyaLowPower::dump_config() {
 void TuyaLowPower::enter_low_power_mode() {
   ESP_LOGI(TAG, "Entering low power mode");
   this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::WIFI_STATE, .payload = std::vector<uint8_t>{0x05}});
+  this->expected_response_ = TuyaLowPowerCommandType::WIFI_STATE;
 }
 
 void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8_t *buffer, size_t len) {
@@ -65,7 +66,7 @@ void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8
     }
 
     case TuyaLowPowerCommandType::WIFI_STATE:
-      this->send_wifi_status_();
+      this->send_wifi_status_(false);
       break;
 
     case TuyaLowPowerCommandType::WIFI_RESET:
@@ -131,7 +132,7 @@ void TuyaLowPower::handle_command_(uint8_t command, uint8_t version, const uint8
   }
 }
 
-void TuyaLowPower::send_wifi_status_() {
+void TuyaLowPower::send_wifi_status_(bool is_request) {
   uint8_t status = 0x02;
   if (network::is_connected()) {
     status = 0x03;
@@ -143,6 +144,10 @@ void TuyaLowPower::send_wifi_status_() {
 
   ESP_LOGD(TAG, "Sending WiFi Status");
   this->send_command_(TuyaLowPowerCommand{.cmd = TuyaLowPowerCommandType::WIFI_STATE, .payload = std::vector<uint8_t>{status}});
+
+  if (is_request) {
+    this->expected_response_ = TuyaLowPowerCommandType::WIFI_STATE;
+  }
 }
 
 #ifdef USE_TIME

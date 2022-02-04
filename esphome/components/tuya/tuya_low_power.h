@@ -32,7 +32,7 @@ class TuyaLowPower : public TuyaBase<TuyaLowPowerCommandType> {
   void handle_command_(uint8_t command, uint8_t version, const uint8_t *buffer, size_t len) override;
   void before_send_raw_command_(TuyaLowPowerCommand command) override {};
   void send_datapoint_command_(uint8_t datapoint_id, TuyaDatapointType datapoint_type, std::vector<uint8_t> data) override {};
-  void send_wifi_status_();
+  void send_wifi_status_(bool is_request = true);
 #ifdef USE_TIME
   void send_local_time_();
 #endif
