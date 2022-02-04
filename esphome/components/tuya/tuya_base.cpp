@@ -212,7 +212,7 @@ void TuyaBase<TCommandType>::send_raw_command_(TuyaCommand<TCommandType> command
   if (!command.payload.empty())
     this->write_array(command.payload.data(), command.payload.size());
 
-  uint8_t checksum = 0x55 + 0xAA + (uint8_t) command.cmd + len_hi + len_lo;
+  uint8_t checksum = 0x55 + 0xAA + version + (uint8_t) command.cmd + len_hi + len_lo;
   for (auto &data : command.payload)
     checksum += data;
   this->write_byte(checksum);
